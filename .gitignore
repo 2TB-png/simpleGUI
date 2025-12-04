@@ -1,0 +1,45 @@
+# ---------------------------
+# Python
+# ---------------------------
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pdb
+*.egg-info/
+*.egg
+*.log
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+
+# Distribution / Packaging
+build/
+dist/
+*.whl
+
+# Bytecode cache
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# ---------------------------
+# PyCharm / JetBrains
+# ---------------------------
+.idea/
+*.iml
+
+# ---------------------------
+# OS-specific
+# ---------------------------
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db

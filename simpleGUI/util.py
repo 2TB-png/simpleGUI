@@ -1,8 +1,8 @@
-import simpleGUI.origen, simpleGUI.userInput
+import simpleGUI.origin, simpleGUI.userInput
 import pygame
 
 
-def generate_button_grid_from_matrix(matrix, width, height, font, separator: float = 0.1) -> simpleGUI.origen.Origen:
+def generate_button_grid_from_matrix(matrix, width, height, font, separator: float = 0.1) -> simpleGUI.origen.Origin:
     rows = len(matrix)
     cols = len(matrix[0])
 
@@ -12,7 +12,7 @@ def generate_button_grid_from_matrix(matrix, width, height, font, separator: flo
     button_height = height//rows - vertical_sep
     button_width = width//cols - horizontal_sep
 
-    buttons = simpleGUI.origen.Origen(0, 0)
+    buttons = simpleGUI.origen.Origin(0, 0)
 
     for row in range(rows):
         for col in range(cols):
