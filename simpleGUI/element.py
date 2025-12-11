@@ -25,6 +25,9 @@ class Element:
     def get_pos(self):
         return self.__rect.x, self.__rect.y
 
+    def get_dimensions(self):
+        return self.__rect.width, self.__rect.height
+
     def get_rect(self):
         return self.__rect
 

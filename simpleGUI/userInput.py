@@ -1,5 +1,5 @@
 import pygame
-from simpleGUI import element
+from simpleGUI import element, structures
 
 class Button(element.Element):
     def __init__(self, x: int, y: int, width: int, height: int, text: str, font, el_type: str = "button", # Basics
@@ -91,3 +91,63 @@ class Button(element.Element):
 
     def __repr__(self):
         return f"<Button(type={self.type}, pos={self.get_pos()}, width={self.get_rect().w}, height={self.get_rect().h}, text='{self.__text}', fg={self.__fg}, bg={self.__bg}, font_color={self.__font_color}, roundness={self.__roundness}, depth={self.__depth}, push_depth={self.__push_depth})>"
+
+
+
+
+class DraggableObject(Button):
+    def __init__(self, x: int, y: int, width: int, height: int, text: str, font, snap_grid: structures.Grid = None, el_type: str = "DraggableObject", # Basics
+                 command=lambda *args:print("Button pressed"), args:tuple=(), kwargs:tuple=(), # Command setup
+                 fg=(150, 150, 150), bg=(100, 100, 100), font_color=(0,0,0), roundness:int=10, depth:int=10, push_depth:int=5): # Style
+
+        super().__init__(x, y, width, height, text, font, el_type, command, args, kwargs, fg, bg, font_color, roundness, depth, push_depth)
+
+        self.__relative_x = 0
+        self.__relative_y = 0
+
+        self.__snap_grid = snap_grid
+
+
+    def update(self, screen = None):
+        if screen is None:
+            screen = self.default_screen
+
+        self.__do_button_logic()
+
+        self.render_button(screen)
+
+    def __do_button_logic(self):
+        mouse = pygame.mouse
+        mouse_pos = mouse.get_pos()
+        mouse_down = mouse.get_pressed()[0]
+
+        self.clicked = False
+
+        self.hover = self.get_rect().collidepoint(mouse_pos[0], mouse_pos[1])
+
+        if mouse_down and self.hover and not self.__mouse_was_down:
+            self.active = True
+            self.__relative_x = mouse_pos[0] - self.get_pos()[0]
+            self.__relative_y = mouse_pos[1] - self.get_pos()[1]
+
+        if self.active:
+            self.move(mouse_pos[0] - self.__relative_x, mouse_pos[1] - self.__relative_y)
+
+        if not mouse_down:
+            self.active = False
+
+            if self.__snap_grid is not None:
+
+                pos = self.get_pos()
+                self.move(
+                    int(pos[0]/self.__snap_grid.horizontal_step+0.5) * self.__snap_grid.horizontal_step,
+                    int(pos[1]/self.__snap_grid.vertical_step+0.5) * self.__snap_grid.vertical_step
+                )
+                pos = self.get_pos()
+                grid_pos = self.__snap_grid.get_pos()
+                grid_dimensions = self.__snap_grid.get_dimensions()
+
+                if ( pos[0] < grid_pos[0] or pos[1] < grid_pos[1]... #TODO: Finish
+                )
+
+        self.__mouse_was_down = mouse_down
