@@ -73,3 +73,21 @@ class Grid(Element):
 
         self.horizontal_step = width // self.horizontal_nodes
         self.vertical_step = height // self.vertical_nodes
+
+    def render_debug(self, screen = None, debug_color=(255, 0, 0), border_width=2):
+        if screen is None:
+            screen = self.default_screen
+
+        pygame.draw.rect(screen, debug_color, self.get_rect(), border_width)
+
+        for i in range(self.vertical_nodes):
+            pygame.draw.line(screen, debug_color,
+                             (self.get_pos()[0], self.get_pos()[1] + i * self.vertical_step), (self.get_pos()[0] + self.get_dimensions()[0], self.get_pos()[1] + i * self.vertical_step),
+                             border_width
+            )
+
+        for i in range(self.horizontal_nodes):
+            pygame.draw.line(screen, debug_color,
+                             (self.get_pos()[0] + i * self.horizontal_step, self.get_pos()[1]), (self.get_pos()[0] + i * self.horizontal_step, self.get_pos()[1] + self.get_dimensions()[1]),
+                             border_width
+            )
