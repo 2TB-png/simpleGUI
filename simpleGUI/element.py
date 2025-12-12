@@ -10,7 +10,7 @@ class Element:
         self.type = el_type
         self.tags = []
 
-    def update(self, screen = None):
+    def update(self, screen = None, render=True):
         if screen is None:
             screen = self.default_screen
         ...

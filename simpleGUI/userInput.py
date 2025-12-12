@@ -1,20 +1,19 @@
 import pygame
-
 from simpleGUI import element, structures
 
 pygame.init()
 
 class Button(element.Element):
-    def __init__(self, x: int, y: int, width: int, height: int, text: str = "Text", font = pygame.font.SysFont('monospace', 30), el_type: str = "button", # Basics
+    def __init__(self, x: int, y: int, width: int, height: int, text: str = "Text", font = pygame.font.SysFont('monospace', 32), el_type: str = "button", # Basics
                  command=lambda *args:print("Button pressed"), args:tuple=(), kwargs:tuple=(), # Command setup
-                 fg: pygame.surface.Surface = None, bg: tuple[int, int, int, int] = (50, 50, 50, 255), font_color = "black", depth:int=10, push_depth:int=5, do_animation: bool = True): # Style
+                 fg: pygame.surface.Surface = None, bg: tuple[int, int, int, int] = (50, 50, 50, 255), font_color:tuple[int,int,int]=(0,0,0), depth:int=10, push_depth:int=5, do_animation: bool = True): # Style
 
         super().__init__(x, y, width, height, el_type = el_type)
 
         if fg is None:
             color = (150, 150, 150)
             fg = pygame.Surface((width, height), pygame.SRCALPHA).convert_alpha()
-            pygame.draw.rect(fg, color, fg.get_rect(), border_radius=width//10)
+            pygame.draw.rect(fg, color, fg.get_rect(), border_radius=min(width, height)//10)
 
         else:
             fg = pygame.transform.scale(fg, (width, height))
@@ -38,22 +37,23 @@ class Button(element.Element):
         self.__bg = self.__mask.to_surface(setcolor=self.__bg_color, unsetcolor=(0, 0, 0, 0))
 
         # State
-        self.__mouse_was_down = False
+        self._mouse_was_down = False
         self.active = False
         self.hover = False
 
         self.clicked = False
 
-    def update(self, screen = None):
+    def update(self, screen = None, render=True):
         if screen is None:
             screen = self.default_screen
 
-        self.__do_button_logic()
+        self._do_button_logic()
 
-        self.render_button(screen)
+        if render:
+            self.render_button(screen)
 
 
-    def __do_button_logic(self):
+    def _do_button_logic(self):
         mouse = pygame.mouse
         mouse_pos = mouse.get_pos()
         mouse_down = mouse.get_pressed()[0]
@@ -72,17 +72,17 @@ class Button(element.Element):
 
 
 
-        if mouse_down and self.hover and not self.__mouse_was_down:
+        if mouse_down and self.hover and not self._mouse_was_down:
             self.active = True
 
-        if self.active and self.__mouse_was_down and self.hover and not mouse_down :
+        if self.active and self._mouse_was_down and self.hover and not mouse_down :
             self.__command(*self.__command_args)
             self.clicked = True
 
         if not mouse_down:
             self.active = False
 
-        self.__mouse_was_down = mouse_down
+        self._mouse_was_down = mouse_down
 
 
     def render_button(self, screen):
@@ -117,9 +117,9 @@ class Button(element.Element):
 
 
 class DraggableObject(Button):
-    def __init__(self, x: int, y: int, width: int, height: int, text: str = "Text", font=pygame.font.SysFont('monospace', 30), snap_grid: structures.Grid = None, el_type: str = "draggable_object",  # Basics
+    def __init__(self, x: int, y: int, width: int, height: int, text: str = "Text", font=pygame.font.SysFont('monospace', 32), snap_grid: structures.Grid = None, el_type: str = "draggable_object",  # Basics
                  command=lambda *args: print("Button pressed"), args: tuple = (), kwargs: tuple = (),  # Command setup
-                 fg: pygame.surface.Surface = None, bg: tuple[int, int, int, int] = (50, 50, 50, 255), font_color="black", depth: int = 10, push_depth: int = 5, do_animation: bool = False):  # Style
+                 fg: pygame.surface.Surface = None, bg: tuple[int, int, int, int] = (0, 0, 0, 0), font_color="black", depth: int = 10, push_depth: int = 5, do_animation: bool = False):  # Style
 
         super().__init__(x, y, width, height, text, font, el_type, command, args, kwargs, fg, bg, font_color, depth, push_depth, do_animation)
 
@@ -131,57 +131,61 @@ class DraggableObject(Button):
         self.__last_pos = (0, 0)
 
 
-    def update(self, screen = None):
+        self.first_update = True
+
+
+    def update(self, screen = None, render=True):
         if screen is None:
             screen = self.default_screen
 
-        self.__do_logic()
+        # Logic ----------
+        self._do_button_logic()
 
-        self.render_button(screen)
-
-    def __do_logic(self):
         mouse = pygame.mouse
         mouse_pos = mouse.get_pos()
-        mouse_down = mouse.get_pressed()[0]
 
-        self.clicked = False
-
-        self.hover = self.get_rect().collidepoint(mouse_pos[0], mouse_pos[1])
-
-        if mouse_down and self.hover and not self.__mouse_was_down:
-            self.active = True
+        if not self._mouse_was_down:
             self.__last_pos = self.get_pos()
             self.__relative_x = mouse_pos[0] - self.get_pos()[0]
             self.__relative_y = mouse_pos[1] - self.get_pos()[1]
 
+
         if self.active:
             self.move(mouse_pos[0] - self.__relative_x, mouse_pos[1] - self.__relative_y)
 
-        if not mouse_down:
-            self.active = False
-
+        if self.clicked or self.first_update:
+            self.first_update = False
             if self.__snap_grid is not None:
                 self.handle_snapping()
 
-        self.__mouse_was_down = mouse_down
+        # ----------
+
+        if render:
+            self.render_button(screen)
+
 
     def handle_snapping(self):
 
         pos = self.get_pos()
+        dimensions = self.get_dimensions()
+
+
         self.move(
-            int(pos[0] / self.__snap_grid.horizontal_step + 0.5) * self.__snap_grid.horizontal_step,
-            int(pos[1] / self.__snap_grid.vertical_step + 0.5) * self.__snap_grid.vertical_step
+            int(pos[0] / self.__snap_grid.horizontal_step + 0.5) * self.__snap_grid.horizontal_step + (self.__snap_grid.horizontal_step - dimensions[0]) // 2 + 1,
+            int(pos[1] / self.__snap_grid.vertical_step + 0.5)   * self.__snap_grid.vertical_step   + (self.__snap_grid.vertical_step - dimensions[1]) // 2 + 1
         )
         pos = self.get_pos()
         grid_pos = self.__snap_grid.get_pos()
         grid_dimensions = self.__snap_grid.get_dimensions()
 
+
         if pos[0] < grid_pos[0] or pos[1] < grid_pos[1] or pos[0] >= grid_pos[0] + grid_dimensions[0] or pos[1] >= grid_pos[1] + grid_dimensions[1]:
             self.move(*self.__last_pos)
 
 
+class Entry(Button):
+    def __init__(self, x:int, y:int, width:int, height:int, text:str="Text", font=pygame.font.SysFont('monospace', 32), el_type:str="draggable_object",  # Basics
+                 command=lambda *args:print("Button pressed"),args:tuple=(), kwargs:tuple=(),  # Command setup
+                 bg:pygame.surface.Surface=None, font_color:tuple[int,int,int]=(0,0,0)):  # Style
 
-
-
-
-
+        super().__init__(x, y, width, height, text, font, el_type, command, args, kwargs, fg=bg, bg=(0,0,0,0), font_color=font_color, depth=0, push_depth=0, do_animation = False)
